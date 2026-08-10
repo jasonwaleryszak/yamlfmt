@@ -409,6 +409,7 @@ const (
 	LiteralStyle
 	FoldedStyle
 	FlowStyle
+	ExplicitDocumentStartStyle
 )
 
 // Node represents an element in the YAML document hierarchy. While documents

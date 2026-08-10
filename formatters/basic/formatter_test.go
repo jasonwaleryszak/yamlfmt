@@ -56,6 +56,25 @@ b:`,
 a:`,
 		},
 		{
+			name: "preserve all document starts",
+			input: `---
+a: 1
+---
+---
+b: 2
+---`,
+			expect: `---
+a: 1
+---
+
+---
+b: 2
+---
+
+`,
+			skipLineEndNormalization: true,
+		},
+		{
 			name: "crlf line ending",
 			config: map[string]any{
 				"line_ending": "crlf",
