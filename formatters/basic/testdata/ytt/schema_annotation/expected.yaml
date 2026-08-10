@@ -1,0 +1,9 @@
+# Source: ytt/examples/schema-arrays/schema.yml
+#@data/values-schema
+---
+resources:
+  - name: ""
+    type: git
+    source:
+      branch: develop
+      private_key: ((read_only_deploy_key.private_key))

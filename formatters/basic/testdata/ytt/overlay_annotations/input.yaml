@@ -1,0 +1,16 @@
+# Source: ytt/examples/k8s-overlay-ingress/network-api-fix.yaml
+#@ load("@ytt:overlay", "overlay")
+#@overlay/match by=overlay.subset({"kind": "Ingress"}),expects="1+"
+---
+spec:
+    rules:
+      #@overlay/match by=lambda i,l,r: "host" in l
+      - host: example.com
+        http:
+            paths:
+              #@overlay/match by=overlay.all, expects="1+"
+              #@overlay/match-child-defaults missing_ok=True
+              - backend:
+                    service:
+                        name: web
+                pathType: ImplementationSpecific

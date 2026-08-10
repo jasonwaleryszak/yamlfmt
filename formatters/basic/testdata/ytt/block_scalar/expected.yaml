@@ -1,0 +1,14 @@
+# Source: ytt/examples/k8s-overlay-in-config-map/config.yml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: conf1
+data:
+  contents.yml: |
+    some_key: true
+    another_key: true
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: conf2

@@ -1,0 +1,14 @@
+# Source: ytt/examples/eirini/config-alt1.yml
+#@ load("@ytt:data", "data")
+
+#@ if/end data.values.kube.auth == "rbacz":
+---
+  apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+      name: secret-generator
+#@ if data.values.kube.auth == "rbac":
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+#@ end

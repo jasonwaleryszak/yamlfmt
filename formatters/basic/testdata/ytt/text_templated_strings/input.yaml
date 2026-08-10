@@ -1,0 +1,7 @@
+# Source: ytt/examples/playground/basics/example-text-template/config.yml
+#@ val1 = "value1"
+#@ val2 = "value2"
+#@yaml/text-templated-strings
+---
+key_alt2:
+    key_(@= val1 @): "middle (@= val2 @) after"

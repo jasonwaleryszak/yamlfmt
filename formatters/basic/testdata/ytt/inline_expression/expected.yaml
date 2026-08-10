@@ -1,0 +1,10 @@
+# Source: ytt/examples/k8s-relative-rolling-update/config.yml
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  #@ replicas = 5
+  #@ unavailBudget = 2
+  replicas: #@ replicas
+  strategy:
+    rollingUpdate:
+      maxUnavailable: #@ (replicas - unavailBudget) if replicas > 3 else 1

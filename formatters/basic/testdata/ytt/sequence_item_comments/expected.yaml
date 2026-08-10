@@ -1,0 +1,10 @@
+# Source: ytt/examples/k8s-overlay-ingress/network-api-fix.yaml
+spec:
+  paths:
+    #@overlay/match by=overlay.all, expects="1+"
+    #@overlay/match-child-defaults missing_ok=True
+    - #! value supplied by another template
+      #@overlay/replace
+      backend:
+        service:
+          name: web
