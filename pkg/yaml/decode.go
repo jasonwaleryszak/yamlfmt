@@ -202,7 +202,7 @@ func (p *parser) parseChild(parent *Node) *Node {
 func (p *parser) document() *Node {
 	n := p.node(DocumentNode, "", "", "")
 	if !p.event.implicit {
-		n.Style |= ExplicitDocumentStartStyle
+		n.Style |= DocumentStartStyle
 	}
 	p.doc = n
 	p.expect(yaml_DOCUMENT_START_EVENT)
