@@ -305,6 +305,7 @@ func yaml_parser_parse_document_start(parser *yaml_parser_t, event *yaml_event_t
 			typ:        yaml_DOCUMENT_START_EVENT,
 			start_mark: token.start_mark,
 			end_mark:   token.end_mark,
+			implicit:   true,
 
 			head_comment: head_comment,
 		}
@@ -717,7 +718,7 @@ func yaml_parser_parse_block_sequence_entry(parser *yaml_parser_t, event *yaml_e
 			return yaml_parser_parse_node(parser, event, true, false)
 		} else {
 			parser.state = yaml_PARSE_BLOCK_SEQUENCE_ENTRY_STATE
-			return yaml_parser_process_empty_scalar(parser, event, mark)
+			return yaml_parser_process_empty_sequence_entry(parser, event, mark, prior_head_len)
 		}
 	}
 	if token.typ == yaml_BLOCK_END_TOKEN {
@@ -768,7 +769,7 @@ func yaml_parser_parse_indentless_sequence_entry(parser *yaml_parser_t, event *y
 			return yaml_parser_parse_node(parser, event, true, false)
 		}
 		parser.state = yaml_PARSE_INDENTLESS_SEQUENCE_ENTRY_STATE
-		return yaml_parser_process_empty_scalar(parser, event, mark)
+		return yaml_parser_process_empty_sequence_entry(parser, event, mark, prior_head_len)
 	}
 	parser.state = parser.states[len(parser.states)-1]
 	parser.states = parser.states[:len(parser.states)-1]
@@ -777,6 +778,25 @@ func yaml_parser_parse_indentless_sequence_entry(parser *yaml_parser_t, event *y
 		typ:        yaml_SEQUENCE_END_EVENT,
 		start_mark: token.start_mark,
 		end_mark:   token.start_mark, // [Go] Shouldn't this be token.end_mark?
+	}
+	return true
+}
+
+func yaml_parser_process_empty_sequence_entry(parser *yaml_parser_t, event *yaml_event_t, mark yaml_mark_t, head_len int) bool {
+	if !yaml_parser_process_empty_scalar(parser, event, mark) {
+		return false
+	}
+	event.line_comment = parser.line_comment
+	parser.line_comment = nil
+	if head_len == 0 {
+		return true
+	}
+
+	event.head_comment = parser.head_comment[:head_len]
+	if len(parser.head_comment) == head_len {
+		parser.head_comment = nil
+	} else {
+		parser.head_comment = append([]byte(nil), parser.head_comment[head_len+1:]...)
 	}
 	return true
 }

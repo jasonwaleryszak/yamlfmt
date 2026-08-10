@@ -1,0 +1,7 @@
+foo:
+  # before one
+  # before two
+  - # inline
+# after one
+# after two
+bar: value

@@ -749,11 +749,6 @@ func yaml_parser_fetch_next_token(parser *yaml_parser_t) (ok bool) {
 		if !ok {
 			return
 		}
-		if len(parser.tokens) > 0 && parser.tokens[len(parser.tokens)-1].typ == yaml_BLOCK_ENTRY_TOKEN {
-			// Sequence indicators alone have no line comments. It becomes
-			// a head comment for whatever follows.
-			return
-		}
 		if !yaml_parser_scan_line_comment(parser, comment_mark) {
 			ok = false
 			return
@@ -1573,7 +1568,7 @@ func yaml_parser_scan_to_next_token(parser *yaml_parser_t) bool {
 			tokenA := parser.tokens[len(parser.tokens)-2]
 			tokenB := parser.tokens[len(parser.tokens)-1]
 			comment := &parser.comments[len(parser.comments)-1]
-			if tokenA.typ == yaml_BLOCK_SEQUENCE_START_TOKEN && tokenB.typ == yaml_BLOCK_ENTRY_TOKEN && len(comment.line) > 0 && !is_break(parser.buffer, parser.buffer_pos) {
+			if tokenA.typ == yaml_BLOCK_SEQUENCE_START_TOKEN && tokenB.typ == yaml_BLOCK_ENTRY_TOKEN && len(comment.line) > 0 && !is_break(parser.buffer, parser.buffer_pos) && parser.mark.column > tokenB.start_mark.column {
 				// If it was in the prior line, reposition so it becomes a
 				// header of the follow up token. Otherwise, keep it in place
 				// so it becomes a header of the former.

@@ -88,6 +88,18 @@ func TestPadLineComments(t *testing.T) {
 	}.Run(t)
 }
 
+func TestEmptySequenceItemComments(t *testing.T) {
+	formatTestCase{
+		name:             "empty sequence item comments",
+		folder:           "empty_sequence_item_line_comment",
+		configureDecoder: noopDecoder,
+		configureEncoder: func(enc *yaml.Encoder) {
+			enc.SetIndent(2)
+			enc.SetArrayIndent(2)
+		},
+	}.Run(t)
+}
+
 func TestAltArrayIndent(t *testing.T) {
 	formatTestCase{
 		name:             "alternate array indent",
