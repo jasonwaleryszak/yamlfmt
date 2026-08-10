@@ -2819,6 +2819,43 @@ func (s *S) TestNodeEncodeDecode(c *C) {
 	}
 }
 
+func (s *S) TestDocumentStartLineComment(c *C) {
+	var node yaml.Node
+	err := yaml.Unmarshal([]byte("--- # document\nkey: value\n"), &node)
+	c.Assert(err, IsNil)
+	c.Assert(node.Kind, Equals, yaml.DocumentNode)
+	c.Assert(node.Style&yaml.ExplicitDocumentStartStyle, Not(Equals), yaml.Style(0))
+	c.Assert(node.HeadComment, Equals, "")
+	c.Assert(node.LineComment, Equals, "# document")
+	c.Assert(node.FootComment, Equals, "")
+
+	data, err := yaml.Marshal(&node)
+	c.Assert(err, IsNil)
+	c.Assert(string(data), Equals, "--- # document\nkey: value\n")
+}
+
+func (s *S) TestEmptyDocumentStartLineComment(c *C) {
+	decoder := yaml.NewDecoder(strings.NewReader("--- # first\n--- # second\n"))
+
+	var first yaml.Node
+	err := decoder.Decode(&first)
+	c.Assert(err, IsNil)
+	c.Assert(first.Kind, Equals, yaml.DocumentNode)
+	c.Assert(first.Style&yaml.ExplicitDocumentStartStyle, Not(Equals), yaml.Style(0))
+	c.Assert(first.LineComment, Equals, "# first")
+	c.Assert(first.FootComment, Equals, "")
+	c.Assert(first.Content, HasLen, 1)
+	c.Assert(first.Content[0].LineComment, Equals, "")
+
+	var second yaml.Node
+	err = decoder.Decode(&second)
+	c.Assert(err, IsNil)
+	c.Assert(second.Kind, Equals, yaml.DocumentNode)
+	c.Assert(second.Style&yaml.ExplicitDocumentStartStyle, Not(Equals), yaml.Style(0))
+	c.Assert(second.LineComment, Equals, "# second")
+	c.Assert(second.FootComment, Equals, "")
+}
+
 func (s *S) TestNodeZeroEncodeDecode(c *C) {
 	// Zero node value behaves as nil when encoding...
 	var n yaml.Node

@@ -41,6 +41,13 @@ func TestFormatter(t *testing.T) {
 			input: `x: "y" # foo comment`,
 		},
 		{
+			name: "retains comments on consecutive empty mapping values",
+			input: `foo:
+  a: # A
+  b: # B
+  c: # C`,
+		},
+		{
 			name: "parses multiple documents",
 			input: `a:
 ---
@@ -66,13 +73,48 @@ b: 2
 			expect: `---
 a: 1
 ---
-
 ---
 b: 2
 ---
-
 `,
 			skipLineEndNormalization: true,
+		},
+		{
+			name: "preserve document start line comment",
+			input: `--- # ...
+---`,
+		},
+		{
+			name: "preserve document start line comment with content",
+			input: `--- # comment
+key: value`,
+		},
+		{
+			name: "preserve document start line comments in multiple documents",
+			input: `--- # first
+a: 1
+--- # second
+b: 2`,
+		},
+		{
+			name: "preserve empty document start line comments",
+			input: `--- # first
+--- # second
+--- # third`,
+		},
+		{
+			name: "keep standalone comment between documents standalone",
+			input: `---
+a: 1
+# between
+---
+b: 2`,
+			expect: `---
+a: 1
+
+# between
+---
+b: 2`,
 		},
 		{
 			name: "crlf line ending",
@@ -287,6 +329,20 @@ map:
 			require.Equal(t, expected, actual)
 		})
 	}
+}
+
+func TestConsecutiveEmptyMappingCommentsAreIdempotent(t *testing.T) {
+	f, err := factory.NewFormatter(nil)
+	require.NoError(t, err)
+
+	input := []byte("foo:\n  a: # A\n  b: # B\n  c: # C\n")
+	first, err := f.Format(input)
+	require.NoError(t, err)
+	require.Equal(t, string(input), string(first))
+
+	second, err := f.Format(first)
+	require.NoError(t, err)
+	require.Equal(t, string(first), string(second))
 }
 
 func TestRetainLineBreaks(t *testing.T) {

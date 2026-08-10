@@ -486,6 +486,7 @@ func (e *encoder) node(node *Node, tail string) {
 	case DocumentNode:
 		yaml_document_start_event_initialize(&e.event, nil, nil, node.Style&ExplicitDocumentStartStyle == 0)
 		e.event.head_comment = []byte(node.HeadComment)
+		e.event.line_comment = []byte(node.LineComment)
 		e.emit()
 		for _, node := range node.Content {
 			e.node(node, "")

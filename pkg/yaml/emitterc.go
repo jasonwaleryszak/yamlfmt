@@ -459,6 +459,9 @@ func yaml_emitter_emit_document_start(emitter *yaml_emitter_t, event *yaml_event
 			if !yaml_emitter_write_indicator(emitter, []byte("---"), true, false, false) {
 				return false
 			}
+			if !yaml_emitter_process_line_comment(emitter) {
+				return false
+			}
 			if emitter.canonical || true {
 				if !yaml_emitter_write_indent(emitter) {
 					return false
@@ -849,8 +852,10 @@ func yaml_emitter_emit_block_mapping_value(emitter *yaml_emitter_t, event *yaml_
 				// so just let it handle the line comment as usual. If it has a
 				// line comment, we can't have both so the one from the key is lost.
 				emitter.line_comment = emitter.key_line_comment
-				emitter.key_line_comment = nil
 			}
+			// Whether it was transferred or discarded, the key comment has
+			// been handled and must not leak into a later mapping entry.
+			emitter.key_line_comment = nil
 		} else if event.sequence_style() != yaml_FLOW_SEQUENCE_STYLE && (event.typ == yaml_MAPPING_START_EVENT || event.typ == yaml_SEQUENCE_START_EVENT) {
 			// An indented block follows, so write the comment right now.
 			emitter.line_comment, emitter.key_line_comment = emitter.key_line_comment, emitter.line_comment
@@ -922,6 +927,14 @@ func yaml_emitter_emit_scalar(emitter *yaml_emitter_t, event *yaml_event_t) bool
 	if !yaml_emitter_select_scalar_style(emitter, event) {
 		return false
 	}
+	// An empty document is represented internally by an implicit empty scalar.
+	// It has no textual content to emit; in particular, it must not disturb the
+	// indentation state and introduce a blank line before the next document.
+	if emitter.root_context && len(event.anchor) == 0 && len(event.tag) == 0 && len(event.value) == 0 && event.implicit {
+		emitter.state = emitter.states[len(emitter.states)-1]
+		emitter.states = emitter.states[:len(emitter.states)-1]
+		return true
+	}
 	if !yaml_emitter_process_anchor(emitter) {
 		return false
 	}
@@ -977,7 +990,13 @@ func yaml_emitter_emit_mapping_start(emitter *yaml_emitter_t, event *yaml_event_
 
 // Check if the document content is an empty scalar.
 func yaml_emitter_check_empty_document(emitter *yaml_emitter_t) bool {
-	return false // [Go] Huh?
+	if len(emitter.events)-emitter.events_head < 1 {
+		return false
+	}
+	event := &emitter.events[emitter.events_head]
+	return event.typ == yaml_SCALAR_EVENT &&
+		len(event.anchor) == 0 && len(event.tag) == 0 && len(event.value) == 0 &&
+		event.implicit
 }
 
 // Check if the next events represent an empty sequence.

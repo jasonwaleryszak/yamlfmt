@@ -341,8 +341,10 @@ func yaml_parser_parse_document_start(parser *yaml_parser_t, event *yaml_event_t
 			
 			// braydonk: Fixing head comments for explicit document start
 			head_comment: parser.head_comment,
+			line_comment: parser.line_comment,
 		}
 		parser.head_comment = []byte{}
+		parser.line_comment = nil
 		skip_token(parser)
 
 	} else {
@@ -412,7 +414,17 @@ func yaml_parser_parse_document_end(parser *yaml_parser_t, event *yaml_event_t) 
 		end_mark:   end_mark,
 		implicit:   implicit,
 	}
+	// A line comment associated with the next document-start token may be
+	// unfolded while looking ahead to finish the current document. Keep it for
+	// the next DOCUMENT-START event rather than consuming it as document-end
+	// metadata.
+	var next_document_line_comment []byte
+	if token.typ == yaml_DOCUMENT_START_TOKEN {
+		next_document_line_comment = parser.line_comment
+		parser.line_comment = nil
+	}
 	yaml_parser_set_event_comments(parser, event)
+	parser.line_comment = next_document_line_comment
 	if len(event.head_comment) > 0 && len(event.foot_comment) == 0 {
 		event.foot_comment = event.head_comment
 		event.head_comment = nil

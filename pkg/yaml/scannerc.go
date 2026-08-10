@@ -732,7 +732,11 @@ func yaml_parser_fetch_next_token(parser *yaml_parser_t) (ok bool) {
 
 	// Is it the document start indicator?
 	if parser.mark.column == 0 && buf[pos] == '-' && buf[pos+1] == '-' && buf[pos+2] == '-' && is_blankz(buf, pos+3) {
-		return yaml_parser_fetch_document_indicator(parser, yaml_DOCUMENT_START_TOKEN)
+		start_mark := parser.mark
+		if !yaml_parser_fetch_document_indicator(parser, yaml_DOCUMENT_START_TOKEN) {
+			return false
+		}
+		return yaml_parser_scan_line_comment(parser, start_mark)
 	}
 
 	// Is it the document end indicator?
